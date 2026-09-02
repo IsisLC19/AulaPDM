@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analisador de Espectro & Frequências Áudio - Aula PDM</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header Navigation -->
+    <header class="app-header">
+      <div class="brand">
+        <span class="logo-icon">✨</span>
+        <h1>Spectrum<span class="highlight">Hz</span></h1>
+      </div>
+      <div class="header-actions">
+        <button id="themeToggleBtn" class="btn-icon" aria-label="Alternar Tema" title="Alternar Modo Claro/Escuro">
+          <span class="theme-icon">🌙</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Grid -->
+    <main class="main-content">
+      <!-- Spectrum Visualizer Card -->
+      <section class="card visualizer-card">
+        <div class="card-header">
+          <h2>Analisador de Espectro</h2>
+          <div class="visualizer-modes">
+            <button class="mode-btn active" data-mode="bars">Barras</button>
+            <button class="mode-btn" data-mode="wave">Onda</button>
+            <button class="mode-btn" data-mode="circle">Circular</button>
+          </div>
+        </div>
+
+        <div class="canvas-wrapper">
+          <canvas id="spectrumCanvas"></canvas>
+          <div id="canvasOverlay" class="canvas-overlay">
+            <span class="play-hint">Faça upload ou selecione um áudio para iniciar</span>
+          </div>
+        </div>
+
+        <div class="frequency-indicator">
+          <span class="freq-label">Frequência Dominante Estimada:</span>
+          <span id="liveFreqDisplay" class="freq-value">-- Hz</span>
+        </div>
+      </section>
+
+      <!-- Main Audio Controls -->
+      <section class="card player-card">
+        <div class="card-header">
+          <h2>Reprodutor de Áudio</h2>
+          <span id="currentTrackTitle" class="track-title">Nenhum arquivo selecionado</span>
+        </div>
+
+        <!-- File Upload Area -->
+        <div class="file-upload-zone" id="dropZone">
+          <input type="file" id="audioFileInput" accept="audio/*" class="file-input">
+          <label for="audioFileInput" class="file-label">
+            <span class="upload-icon">📁</span>
+            <span>Escolher arquivo MP3 / Áudio</span>
+            <small>ou arraste e solte o arquivo aqui</small>
+          </label>
+        </div>
+
+        <!-- Player Controls -->
+        <div class="player-controls">
+          <button id="playPauseBtn" class="btn btn-primary btn-glow" disabled>
+            <span class="btn-icon-label">▶</span> Tocar
+          </button>
+          <button id="stopBtn" class="btn btn-secondary" disabled>⏹ Parar</button>
+        </div>
+
+        <!-- Seekbar & Volume -->
+        <div class="player-sliders">
+          <div class="slider-group">
+            <span id="currentTimeDisplay">00:00</span>
+            <input type="range" id="seekBar" class="range-slider" min="0" value="0" step="0.1" disabled>
+            <span id="durationDisplay">00:00</span>
+          </div>
+          <div class="slider-group volume-group">
+            <span>🔊 Volume</span>
+            <input type="range" id="volumeControl" class="range-slider" min="0" max="1" step="0.01" value="0.8">
+          </div>
+        </div>
+      </section>
+
+      <!-- Frequency Therapy Controls -->
+      <section class="card therapy-card">
+        <div class="card-header">
+          <h2>Terapia de Frequências (Solfeggio / Hz)</h2>
+          <span class="badge" id="activeHzBadge">440 Hz (Padrão)</span>
+        </div>
+        <p class="section-desc">Ajuste o tom ou sobreponha frequências de ressonância alternativa.</p>
+
+        <div class="preset-chips">
+          <button class="chip active" data-hz="440" data-desc="Padrão de Afinação">440 Hz (Padrão)</button>
+          <button class="chip" data-hz="432" data-desc="Harmonia Natural & Relaxamento">432 Hz (Cura/Natureza)</button>
+          <button class="chip" data-hz="528" data-desc="Transformação & Milagres (DNA)">528 Hz (Transformação)</button>
+          <button class="chip" data-hz="639" data-desc="Conexão & Relacionamentos">639 Hz (Conexão)</button>
+          <button class="chip" data-hz="741" data-desc="Intuição & Despertar">741 Hz (Intuição)</button>
+          <button class="chip" data-hz="852" data-desc="Retorno à Ordem Espiritual">852 Hz (Espiritual)</button>
+        </div>
+
+        <div class="therapy-settings">
+          <div class="setting-item">
+            <label for="pitchShiftToggle">
+              <input type="checkbox" id="pitchShiftToggle" checked>
+              <span>Ajustar Pitch do Áudio (Re-afinar música para frequência alvo)</span>
+            </label>
+          </div>
+          <div class="setting-item">
+            <label for="binauralToggle">
+              <input type="checkbox" id="binauralToggle">
+              <span>Sobrepor Tom Senoidal / Binaural Suave na Frequência Alvo</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="export-box">
+          <button id="exportWavBtn" class="btn btn-accent btn-glow" disabled>
+            💾 Salvar Áudio com Nova Frequência (.WAV)
+          </button>
+          <small id="exportStatus" class="status-msg"></small>
+        </div>
+      </section>
+
+      <!-- Emotion Audio Suggestions -->
+      <section class="card emotion-card">
+        <div class="card-header">
+          <h2>Sugestões por Emoção</h2>
+        </div>
+        <p class="section-desc">Como você se sente agora? Escolha um estado para ouvir faixas recomendadas.</p>
+
+        <div class="emotion-grid">
+          <button class="emotion-btn" data-emotion="relaxed">
+            <span class="emoji">🧘</span>
+            <span class="name">Relaxado</span>
+            <small>432Hz Ambient Ambient</small>
+          </button>
+          <button class="emotion-btn" data-emotion="focused">
+            <span class="emoji">🎯</span>
+            <span class="name">Focado</span>
+            <small>528Hz Alpha Waves</small>
+          </button>
+          <button class="emotion-btn" data-emotion="energetic">
+            <span class="emoji">⚡</span>
+            <span class="name">Energético</span>
+            <small>Upbeat Solfeggio Rhythm</small>
+          </button>
+          <button class="emotion-btn" data-emotion="calm">
+            <span class="emoji">🌊</span>
+            <span class="name">Calmo</span>
+            <small>Deep Meditation Synth</small>
+          </button>
+        </div>
+      </section>
+
+      <!-- Remix Studio -->
+      <section class="card remix-card">
+        <div class="card-header">
+          <h2>Estúdio de Remix</h2>
+          <span class="badge">Mixer de 2 Canais</span>
+        </div>
+        <p class="section-desc">Misture o áudio principal com faixas secundárias ou sons de ambiente.</p>
+
+        <div class="remix-grid">
+          <div class="deck-channel">
+            <h3>Canal A (Áudio Principal)</h3>
+            <div class="channel-controls">
+              <label>Volume A</label>
+              <input type="range" id="volChannelA" class="range-slider" min="0" max="1" step="0.01" value="1">
+            </div>
+          </div>
+
+          <div class="deck-channel">
+            <h3>Canal B (Som Ambiente / Base)</h3>
+            <div class="channel-controls">
+              <select id="channelBSelect" class="styled-select">
+                <option value="none">Nenhum</option>
+                <option value="rain">Chuva Suave</option>
+                <option value="waves">Ondas do Mar</option>
+                <option value="white_noise">Ruído Branco</option>
+                <option value="pink_noise">Ruído Rosa</option>
+              </select>
+              <label>Volume B</label>
+              <input type="range" id="volChannelB" class="range-slider" min="0" max="1" step="0.01" value="0.5">
+            </div>
+          </div>
+        </div>
+
+        <div class="crossfader-container">
+          <label for="crossfader">Crossfader (Canal A ↔ Canal B)</label>
+          <input type="range" id="crossfader" class="range-slider" min="0" max="1" step="0.01" value="0.5">
+          <div class="crossfader-labels">
+            <span>Deck A</span>
+            <span>Equilibrado</span>
+            <span>Deck B</span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <p>Desenvolvido para Aula PDM &bull; Hospedado no GitHub Pages</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
